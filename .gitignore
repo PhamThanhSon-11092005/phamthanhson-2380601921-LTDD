@@ -1,0 +1,23 @@
+## --- Visual Studio & .NET ---
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.userosscache
+*.suo
+publish_*/
+*.zip
+
+## --- Flutter & Dart ---
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.iml
+.idea/
+
+## --- System files ---
+.DS_Store
+Thumbs.db
+desktop.ini

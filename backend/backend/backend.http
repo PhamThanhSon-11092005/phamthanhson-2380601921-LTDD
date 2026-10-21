@@ -1,0 +1,265 @@
+# Đổi giữa 5108 hoặc 5000 tùy port profile đang chạy trong Visual Studio
+@baseUrl = http://localhost:5108
+@token = your_jwt_token_here
+
+### ========================================================
+### 0. KIỂM TRA SERVER HOẠT ĐỘNG
+### ========================================================
+GET {{baseUrl}}/
+Accept: application/json
+
+### ========================================================
+### 1. NHÓM AUTH (ĐĂNG KÝ, ĐĂNG NHẬP, OTP, FACE LOGIN)
+### ========================================================
+
+### 1.1 Đăng ký tài khoản mới qua Email (Mục 1)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "sonpham_test",
+  "email": "sonpham2380601921@example.com",
+  "password": "Password123@",
+  "fullName": "Phạm Thanh Sơn",
+  "phoneNumber": "0912345678",
+  "roleId": 2
+}
+
+### 1.2 Đăng nhập bằng Tên đăng nhập + Mật khẩu (Mục 2) -> Trả về debugOtp
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "admin",
+  "password": "Password123@"
+}
+
+### 1.3 Xác thực mã OTP qua Email (Mục 2) -> Trả về Token JWT
+POST {{baseUrl}}/api/auth/verify-otp
+Content-Type: application/json
+
+{
+  "email": "admin@company.com",
+  "otpCode": "123456",
+  "type": "LOGIN"
+}
+
+### 1.4 Đăng ký khuôn mặt AI mẫu (Mục 5.a)
+POST {{baseUrl}}/api/auth/register-face
+Content-Type: application/json
+
+{
+  "userId": 2,
+  "faceEmbedding": "[0.12, 0.44, 0.88, 0.23, 0.55, 0.77]",
+  "faceImageUrl": "https://example.com/face.jpg"
+}
+
+### 1.5 Đăng nhập bằng Khuôn mặt (AI Face Login - Mục 5.a)
+POST {{baseUrl}}/api/auth/face-login
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "nhanvien1",
+  "faceEmbedding": "[0.12, 0.44, 0.88, 0.23, 0.55, 0.77]"
+}
+
+
+### ========================================================
+### 2. NHÓM CHẤM CÔNG (ATTENDANCE & ANTI-FAKE GPS)
+### ========================================================
+
+### 2.1 Điểm danh Check-in (GPS + Wi-Fi BSSID + Face % - Mục 6)
+POST {{baseUrl}}/api/attendance/check-in?userId=2
+Content-Type: application/json
+
+{
+  "latitude": 10.8558,
+  "longitude": 106.7853,
+  "address": "Đại học HUTECH - Thu Duc Campus",
+  "wifiBSSID": "Office_WiFi_5G",
+  "faceMatchPercent": 99.5,
+  "notes": "Chấm công vào ca sáng đúng giờ"
+}
+
+### 2.2 Xem trạng thái điểm danh hôm nay của nhân viên
+GET {{baseUrl}}/api/attendance/today?userId=2
+
+### 2.3 Điểm danh Check-out
+POST {{baseUrl}}/api/attendance/check-out?userId=2
+Content-Type: application/json
+
+{
+  "latitude": 10.8558,
+  "longitude": 106.7853,
+  "wifiBSSID": "Office_WiFi_5G"
+}
+
+### 2.4 Xem lịch sử chấm công theo tháng
+GET {{baseUrl}}/api/attendance/my-history?userId=2&month=10&year=2026
+
+### 2.5 Admin xem thống kê tổng quan ngày (KPIs)
+GET {{baseUrl}}/api/attendance/stats
+
+### 2.6 Admin xem bảng chấm công tất cả nhân viên
+GET {{baseUrl}}/api/attendance/all
+
+
+### ========================================================
+### 3. QUẢN LÝ NHÂN VIÊN & VỊ TRÍ TRỰC TIẾP (CRUD & Mục 5.b)
+### ========================================================
+
+### 3.1 Lấy danh sách toàn bộ nhân viên (CRUD Read)
+GET {{baseUrl}}/api/users
+
+### 3.2 Lấy chi tiết nhân viên theo ID
+GET {{baseUrl}}/api/users/2
+
+### 3.3 Thêm nhân viên mới (CRUD Create)
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "username": "nhanvien2",
+  "email": "nhanvien2@company.com",
+  "password": "Password123@",
+  "fullName": "Trần Thị Lan",
+  "phoneNumber": "0987654321",
+  "roleId": 2,
+  "departmentId": 1,
+  "shiftId": 3
+}
+
+### 3.4 Cập nhật thông tin nhân viên (CRUD Update)
+PUT {{baseUrl}}/api/users/2
+Content-Type: application/json
+
+{
+  "userId": 2,
+  "fullName": "Phạm Thanh Sơn (IT Leader)",
+  "phoneNumber": "0912345678",
+  "roleId": 2,
+  "departmentId": 1,
+  "shiftId": 3,
+  "isActive": true
+}
+
+### 3.5 Cập nhật vị trí GPS trực tiếp (Mục 5.b: Chia sẻ vị trí)
+POST {{baseUrl}}/api/users/update-location
+Content-Type: application/json
+
+{
+  "userId": 2,
+  "latitude": 10.8560,
+  "longitude": 106.7855
+}
+
+### 3.6 Lấy tọa độ trực tiếp của các nhân viên (Radar Live Map)
+GET {{baseUrl}}/api/users/live-locations
+
+
+### ========================================================
+### 4. QUẢN LÝ PHÒNG BAN & GEOFENCE WI-FI (CRUD - Mục 6)
+### ========================================================
+
+### 4.1 Danh sách phòng ban
+GET {{baseUrl}}/api/departments
+
+### 4.2 Thêm phòng ban có tọa độ Geofence & Wi-Fi BSSID (CRUD Create)
+POST {{baseUrl}}/api/departments
+Content-Type: application/json
+
+{
+  "departmentCode": "MKT",
+  "departmentName": "Phòng Marketing & Truyền Thông",
+  "locationAddress": "Tầng 5, Tòa nhà Innovation, TP.HCM",
+  "allowedLatitude": 10.8558,
+  "allowedLongitude": 106.7853,
+  "allowedRadiusMeter": 200.0,
+  "allowedWifiBSSID": "Marketing_5G"
+}
+
+### 4.3 Cập nhật phòng ban (CRUD Update)
+PUT {{baseUrl}}/api/departments/1
+Content-Type: application/json
+
+{
+  "departmentId": 1,
+  "departmentName": "Phòng Công Nghệ Thông Tin (Updated)",
+  "locationAddress": "Đại học HUTECH Thu Duc Campus",
+  "allowedLatitude": 10.8558,
+  "allowedLongitude": 106.7853,
+  "allowedRadiusMeter": 180.0,
+  "allowedWifiBSSID": "Office_WiFi_5G"
+}
+
+
+### ========================================================
+### 5. QUẢN LÝ CA LÀM VIỆC (CRUD SHIFTS)
+### ========================================================
+
+### 5.1 Danh sách ca làm việc
+GET {{baseUrl}}/api/shifts
+
+### 5.2 Thêm ca làm việc mới
+POST {{baseUrl}}/api/shifts
+Content-Type: application/json
+
+{
+  "shiftName": "Ca Tối (Night Shift)",
+  "startTime": "18:00:00",
+  "endTime": "22:00:00",
+  "gracePeriodMinutes": 10
+}
+
+
+### ========================================================
+### 6. QUẢN LÝ ĐƠN TỪ & GIẢI TRÌNH (CRUD LEAVE REQUESTS)
+### ========================================================
+
+### 6.1 Nhân viên gửi đơn xin nghỉ phép / đi trễ / giải trình
+POST {{baseUrl}}/api/leaverequests
+Content-Type: application/json
+
+{
+  "userId": 2,
+  "requestType": "NghiPhep",
+  "startDate": "2026-10-25T00:00:00Z",
+  "endDate": "2026-10-26T00:00:00Z",
+  "reason": "Em xin phép nghỉ 1 ngày đi khám bệnh định kỳ"
+}
+
+### 6.2 Xem danh sách đơn của nhân viên
+GET {{baseUrl}}/api/leaverequests/my-requests?userId=2
+
+### 6.3 Admin xem tất cả đơn cần duyệt
+GET {{baseUrl}}/api/leaverequests?status=Pending
+
+### 6.4 Admin phê duyệt hoặc từ chối đơn
+PUT {{baseUrl}}/api/leaverequests/1/review
+Content-Type: application/json
+
+{
+  "approverId": 1,
+  "status": "Approved",
+  "comment": "Đồng ý phê duyệt, chúc em mau khỏe."
+}
+
+
+### ========================================================
+### 7. PHÒNG HỌP GỌI VIDEO NHÓM (Mục 5.c: VIDEO CALL ROOMS)
+### ========================================================
+
+### 7.1 Tạo phòng họp video nhóm mới
+POST {{baseUrl}}/api/videocall/create
+Content-Type: application/json
+
+{
+  "roomName": "Họp Điểm Danh & Triển Khai Dự Án KTLTDD",
+  "hostUserId": 1
+}
+
+### 7.2 Lấy danh sách các phòng họp đang hoạt động
+GET {{baseUrl}}/api/videocall/rooms
+
+### 7.3 Đóng phòng họp sau khi kết thúc
+POST {{baseUrl}}/api/videocall/1/close
